@@ -8,5 +8,3 @@ How to run it on your machine:
 - [ ] type ```python3 cli-app.py``` inside the project directory to run python code
 
 If everything works as expected, you should be able to see the webcam feed inside your terminal.
-
-NB: It was tested on unix. For windows
