@@ -1,7 +1,11 @@
-from PIL import Image, ImageOps
 import cv2
 import os
 import time 
+def clearConsole():
+    command = 'clear'
+    if os.name in ('nt', 'dos'):  # If Machine is running on Windows, use cls
+        command = 'cls'
+    os.system(command)
 
 def getASCII_Color(color):
     density = "Ñ@#W$9876543210?!abc;:+=-,._   ";
@@ -31,8 +35,9 @@ def AsciiWebcam():
         #cv2.imshow('webcam feed', frame)
 
         convertSingleFrame(frame)
+
         time.sleep(0.3)
-        os.system("clear")
+        clearConsole()
 
         key = cv2.waitKey(1)
         if key == 27:
