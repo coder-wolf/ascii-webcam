@@ -1,4 +1,6 @@
 import cv2
+from rich import print as rprint
+from rich.console import Console
 import os
 import time 
 def clearConsole():
@@ -15,16 +17,39 @@ def getASCII_Color(color):
     return density[int(color/len(density))]
 
 
-def convertSingleFrame(image):
+def convertFrameGray(image, w, h):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    result = cv2.resize(gray, (1250,230), interpolation= cv2.INTER_LINEAR)
-    cv2.flip(result, 1)
+    result = cv2.resize(gray, (w, h), interpolation= cv2.INTER_LINEAR)
+    result = cv2.flip(result, 1)
 
     for rows in result:
         for pixel in rows:
             print(getASCII_Color(pixel), end='')
         print()
+    time.sleep(0.25)
+    clearConsole()
 
+
+def convertFrameColor(image, w, h):
+    console = Console()
+
+    result = cv2.resize(image, (w, h), interpolation= cv2.INTER_LINEAR)
+    cv2.flip(result, 1)
+    for rows in result:
+        for pixel in rows:
+            gray_pixel = 0
+            for val in pixel:
+                gray_pixel += val
+            gray_pixel = gray_pixel / 3
+            b = pixel[0] 
+            g = pixel[1] 
+            r = pixel[2] 
+            pixel_color = "rgb("+str(r)+","+str(g)+","+str(b)+")"
+
+            console.print(getASCII_Color(gray_pixel), end='', style=pixel_color)
+        print()
+    time.sleep(0.23)
+    clearConsole()
 
 
 def AsciiWebcam():
@@ -34,10 +59,10 @@ def AsciiWebcam():
 
         #cv2.imshow('webcam feed', frame)
 
-        convertSingleFrame(frame)
+        size = os.get_terminal_size()
+        convertFrameGray(frame, size[0], size[1])
+        #convertFrameColor(frame, size[0], size[1])
 
-        time.sleep(0.3)
-        clearConsole()
 
         key = cv2.waitKey(1)
         if key == 27:
@@ -47,9 +72,9 @@ def AsciiWebcam():
     #cv2.destroyAllWindows()
 
 def main():
-    # og_image = Image.open('mia.png')
+    #og_image = cv2.imread("ss.png")
     AsciiWebcam()
-    # convertSingleFrame(og_image)
+    #convertFrameColor(og_image)
 
 
 if __name__ == '__main__':
