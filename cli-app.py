@@ -8,50 +8,51 @@ from rich.console import Console
 
 def clearConsole():
     command = 'clear'
-    
+
     if os.name in ('nt', 'dos'):  # If Machine is running on Windows, use cls
         command = 'cls'
-    
+
     os.system(command)
 
 
 def getASCII_Color(color):
-    #density = "Ñ@#W$9876543210?!abc;:+=-,._   "
+    # density = "Ñ@#W$9876543210?!abc;:+=-,._   "
     #density = density[::-1]
 
     density = '       .:-i|=+%\O#@'
-    
+
     return density[int(color/len(density))]
 
 
-def convertFrameGray(image, w, h):
+def convertFrameGray(image):
     clearConsole()
 
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    result = cv2.resize(gray, (w, h), interpolation=cv2.INTER_LINEAR)
+    result = cv2.resize(gray, os.get_terminal_size(),
+                        interpolation=cv2.INTER_LINEAR)
     #result = cv2.flip(result, 1)
 
     for rows in result:
         for pixel in rows:
             print(getASCII_Color(pixel), end='')
-        print()    
+        print()
     time.sleep(0.25)
 
 
-def convertFrameColor(image, w, h, ch='a'):
+def convertFrameColor(image, ch='a'):
     clearConsole()
-    
-    console = Console()
-    # TODO keep the aspect ratio.
 
-    # result = cv2.resize(image, (w, h), interpolation=cv2.INTER_LINEAR)
+    console = Console()
+
+    result = cv2.resize(image, os.get_terminal_size(),
+                        interpolation=cv2.INTER_LINEAR)
     result = cropKeepingAspectRatio(image)
     #result = cv2.flip(result, 1)
-    
+
     for rows in result:
         for pixel in rows:
             gray_pixel = 0
-            
+
             for val in pixel:
                 gray_pixel += val
             gray_pixel = gray_pixel / 3
@@ -59,7 +60,7 @@ def convertFrameColor(image, w, h, ch='a'):
             b = pixel[0]
             g = pixel[1]
             r = pixel[2]
-            
+
             pixel_color = "rgb("+str(r)+","+str(g)+","+str(b)+")"
 
             console.print(ch, end='', style=pixel_color)
@@ -77,13 +78,13 @@ def AsciiWebcam(arg, ch):
         frame = cv2.flip(frame, 1)
         size = os.get_terminal_size()
 
-        if arg == '-c' or arg == 'color' or arg == 'col' or arg == '--color' or arg == '--c' or arg == '-color':
-            convertFrameColor(frame, size[0], size[1], ch=ch)
+        if arg[-1:] == 'c' or arg[-3:] == 'col' or arg[-5:] == 'color':
+            convertFrameColor(frame, ch=ch)
         else:
-            convertFrameGray(frame, size[0], size[1])
+            convertFrameGray(frame)
 
         key = cv2.waitKey(1)
-        
+
         if key == 27:
             break
 
@@ -93,24 +94,50 @@ def AsciiWebcam(arg, ch):
 
 def cropKeepingAspectRatio(image):
     size = os.get_terminal_size()
-    
+
     window_w = size[0]
     window_h = size[1]
 
     img_w = image.shape[0]
     img_h = image.shape[1]
-    
+
     image_aspect_ratio = img_w / img_h
+    window_aspect_ratio = window_w / window_h
 
-    crop_w = w
-    crop_h = h
+    # Stretching image a bit on the side, because, the fonts aren't exactly square
+    # They are a bit narrower than square shape.
+    image_aspect_ratio /= 2.1
 
-    result = cv2.resize(image, (int(crop_w), int(crop_h)), interpolation=cv2.INTER_LINEAR)
-    
+    crop_w = window_w
+    crop_h = window_h
+    # there can be two problems that might occur
+    # 1. The width is more stretched
+    # 2. The height is more stretched
+
+    # Let's solve each of them.
+    # 1. Solution:
+    #    reduce the width, down to the amount when it matches the aspect ratio
+    if window_aspect_ratio > image_aspect_ratio:
+        # Case 1
+        crop_w = window_w
+        crop_h = crop_w * image_aspect_ratio
+        # pass
+    else:  # TODO fix needed here. Not working as expected.
+        crop_h = window_h
+        crop_w = crop_h * image_aspect_ratio
+        # pass
+
+    # 2. Solution:
+    #    reduce the height, down to the amount when it matches the aspect ratio
+
+    result = cv2.resize(image, (int(crop_w), int(crop_h)),
+                        interpolation=cv2.INTER_LINEAR)
+
     return result
 
 
 def saveWebcamVideo():
+    # TODO complete this function
     pass
 
 
@@ -123,11 +150,11 @@ def main():
     if len(sys.argv) >= 2:
         arg = sys.argv[1]
 
-    if arg == 'image' or arg == '--image' or arg == '-image':
+    if arg[-5:] == 'image':
         if second != 'a':
             size = os.get_terminal_size()
             img = cv2.imread(second)
-            convertFrameColor(img, size[0], size[1])
+            convertFrameColor(img, )
         else:
             print("Error: No file input")
 
@@ -137,5 +164,5 @@ def main():
 
 
 if __name__ == '__main__':
-    
+
     main()
