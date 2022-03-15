@@ -29,7 +29,7 @@ def convertFrameGray(image):
 
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     result = cv2.resize(gray, os.get_terminal_size(),
-                        interpolation=cv2.INTER_LINEAR)
+            interpolation=cv2.INTER_LINEAR)
     #result = cv2.flip(result, 1)
 
     for rows in result:
@@ -45,8 +45,8 @@ def convertFrameColor(image, ch='a'):
     console = Console()
 
     result = cv2.resize(image, os.get_terminal_size(),
-                        interpolation=cv2.INTER_LINEAR)
-    result = cropKeepingAspectRatio(image)
+            interpolation=cv2.INTER_LINEAR)
+    result = crop(image)
     #result = cv2.flip(result, 1)
 
     for rows in result:
@@ -92,8 +92,12 @@ def AsciiWebcam(arg, ch):
     # cv2.destroyAllWindows( )
 
 
-def cropKeepingAspectRatio(image):
+def crop(image, keepAspectRatio = False):
     size = os.get_terminal_size()
+
+    if not keepAspectRatio:
+        return cv2.resize(image, (int(size[0]), int(size[1])),
+                interpolation=cv2.INTER_LINEAR)
 
     window_w = size[0]
     window_h = size[1]
@@ -131,7 +135,7 @@ def cropKeepingAspectRatio(image):
     #    reduce the height, down to the amount when it matches the aspect ratio
 
     result = cv2.resize(image, (int(crop_w), int(crop_h)),
-                        interpolation=cv2.INTER_LINEAR)
+            interpolation=cv2.INTER_LINEAR)
 
     return result
 
